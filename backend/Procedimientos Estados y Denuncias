@@ -1,0 +1,40 @@
+/* Procedimiento para cambiar estado de Denuncia */
+IF OBJECT_ID('spu_DenunciaCambiarEstado', 'P') IS NOT NULL
+    DROP PROCEDURE spu_DenunciaCambiarEstado;
+GO
+
+CREATE PROCEDURE spu_DenunciaCambiarEstado
+    @IdDenuncia INT,
+    @NuevoEstado VARCHAR(20),
+    @Comentario VARCHAR(255) = NULL,
+    @IdAutoridad INT = NULL
+AS
+BEGIN
+  DECLARE @EstadoAnterior VARCHAR(20);
+  SELECT @EstadoAnterior = Estado FROM Denuncia WHERE IdDenuncia = @IdDenuncia;
+
+  UPDATE Denuncia
+     SET Estado = @NuevoEstado,
+         FechaCierre = CASE WHEN @NuevoEstado = 'RESUELTA' THEN GETDATE() ELSE FechaCierre END
+   WHERE IdDenuncia = @IdDenuncia;
+
+  INSERT INTO EstadoDenuncia(IdDenuncia, EstadoAnterior, EstadoNuevo, Comentario, IdAutoridad)
+  VALUES(@IdDenuncia, @EstadoAnterior, @NuevoEstado, @Comentario, @IdAutoridad);
+END;
+GO
+
+/* Procedimiento para agregar comentarios */
+IF OBJECT_ID('spu_ComentarioInsert', 'P') IS NOT NULL
+    DROP PROCEDURE spu_ComentarioInsert;
+GO
+
+CREATE PROCEDURE spu_ComentarioInsert
+    @IdDenuncia INT,
+    @IdUsuario INT,
+    @Texto VARCHAR(500)
+AS
+BEGIN
+  INSERT INTO Comentario(IdDenuncia, IdUsuario, Texto)
+  VALUES(@IdDenuncia, @IdUsuario, @Texto);
+END;
+GO
