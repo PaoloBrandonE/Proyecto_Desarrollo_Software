@@ -1,0 +1,20 @@
+/* 
+** CREABASE.SQL
+**
+** Sistema de Denuncias Ciudadanas
+*/
+
+CREATE DATABASE BD_DenunciasCiudadanas
+ON
+  (NAME = DenunciasCiudadanas_Data,
+   FILENAME = 'D:\Data\DenunciasCiudadanas.mdf',
+   SIZE = 10MB,
+   MAXSIZE = 50MB,
+   FILEGROWTH = 5MB)
+LOG ON
+  (NAME = DenunciasCiudadanas_Log,
+   FILENAME = 'D:\Data\DenunciasCiudadanas.ldf',
+   SIZE = 5MB,
+   MAXSIZE = 30MB,
+   FILEGROWTH = 2MB);
+GO
