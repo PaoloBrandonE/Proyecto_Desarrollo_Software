@@ -1,0 +1,56 @@
+/* Procedimiento para insertar/actualizar Denuncias */
+IF OBJECT_ID('spu_DenunciaInsertUpdate', 'P') IS NOT NULL
+    DROP PROCEDURE spu_DenunciaInsertUpdate;
+GO
+
+CREATE PROCEDURE spu_DenunciaInsertUpdate
+    @IdDenuncia INT = NULL,
+    @IdUsuario INT,
+    @Titulo VARCHAR(150),
+    @Descripcion VARCHAR(MAX),
+    @Direccion VARCHAR(255),
+    @TipoProblema VARCHAR(60)
+AS
+BEGIN
+  IF EXISTS (SELECT IdDenuncia FROM Denuncia WHERE IdDenuncia = @IdDenuncia)
+    UPDATE Denuncia
+       SET Titulo = @Titulo,
+           Descripcion = @Descripcion,
+           Direccion = @Direccion,
+           TipoProblema = @TipoProblema,
+           Estado = 'EN_REVISION'
+     WHERE IdDenuncia = @IdDenuncia;
+  ELSE
+    INSERT INTO Denuncia (IdUsuario, Titulo, Descripcion, Direccion, TipoProblema)
+    VALUES(@IdUsuario, @Titulo, @Descripcion, @Direccion, @TipoProblema);
+END;
+GO
+
+/* Procedimiento para eliminar Denuncia */
+IF OBJECT_ID('spu_DenunciaDelete', 'P') IS NOT NULL
+    DROP PROCEDURE spu_DenunciaDelete;
+GO
+
+CREATE PROCEDURE spu_DenunciaDelete @IdDenuncia INT
+AS
+BEGIN
+  DELETE FROM Denuncia WHERE IdDenuncia = @IdDenuncia;
+END;
+GO
+
+/* Procedimiento para listar Denuncias */
+IF OBJECT_ID('spu_DenunciasSelect', 'P') IS NOT NULL
+    DROP PROCEDURE spu_DenunciasSelect;
+GO
+
+CREATE PROCEDURE spu_DenunciasSelect
+    @IdUsuario INT = 0,
+    @Estado VARCHAR(20) = '*'
+AS
+BEGIN
+  SELECT IdDenuncia, Titulo, Descripcion, Direccion, TipoProblema, Estado, FechaCreacion
+    FROM Denuncia
+   WHERE (@IdUsuario = 0 OR IdUsuario = @IdUsuario)
+     AND (@Estado = '*' OR Estado = @Estado);
+END;
+GO
