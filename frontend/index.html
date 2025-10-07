@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Denuncias Urbanas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            margin: 5px 0;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transform: translateX(5px);
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-registrada { background-color: #e3f2fd; color: #1976d2; }
+        .status-en_revision { background-color: #fff3e0; color: #f57c00; }
+        .status-asignada { background-color: #f3e5f5; color: #7b1fa2; }
+        .status-en_ejecucion { background-color: #e8f5e8; color: #388e3c; }
+        .status-resuelta { background-color: #e8f5e8; color: #2e7d32; }
+        .status-rechazada { background-color: #ffebee; color: #d32f2f; }
+        .role-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        .role-ciudadano { background-color: #e3f2fd; color: #1976d2; }
+        .role-autoridad { background-color: #f3e5f5; color: #7b1fa2; }
+        .role-admin { background-color: #ffebee; color: #d32f2f; }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-custom {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .table-responsive {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-4">
+                    <h4 class="text-white mb-4">
+                        <i class="fas fa-city me-2"></i>
+                        Denuncias Urbanas
+                    </h4>
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('denuncias')">
+                            <i class="fas fa-exclamation-triangle me-2"></i> Denuncias
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('usuarios')">
+                            <i class="fas fa-users me-2"></i> Usuarios
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('estadisticas')">
+                            <i class="fas fa-chart-bar me-2"></i> Estadísticas
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('configuracion')">
+                            <i class="fas fa-cog me-2"></i> Configuración
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 id="page-title">Dashboard</h2>
+                        <div class="d-flex align-items-center">
+                            <span class="me-3">Bienvenido, <strong id="user-name">Usuario</strong></span>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle me-1"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Section -->
+                    <div id="dashboard-section">
+                        <div class="row mb-4">
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                        <h3 id="total-denuncias">0</h3>
+                                        <p class="mb-0">Total Denuncias</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-clock fa-2x mb-2"></i>
+                                        <h3 id="pendientes">0</h3>
+                                        <p class="mb-0">Pendientes</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <h3 id="resueltas">0</h3>
+                                        <p class="mb-0">Resueltas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-users fa-2x mb-2"></i>
+                                        <h3 id="total-usuarios">0</h3>
+                                        <p class="mb-0">Usuarios</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-chart-line me-2"></i>Denuncias por Estado</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="estadosChart" width="400" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-list me-2"></i>Últimas Denuncias</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ultimas-denuncias">
+                                            <!-- Se llenará dinámicamente -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Denuncias Section -->
+                    <div id="denuncias-section" class="hidden">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Gestión de Denuncias</h4>
+                            <button class="btn btn-primary btn-custom" onclick="showModal('denuncia')">
+                                <i class="fas fa-plus me-2"></i>Nueva Denuncia
+                            </button>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Estado</label>
+                                        <select class="form-select" id="filtro-estado">
+                                            <option value="">Todos</option>
+                                            <option value="REGISTRADA">Registrada</option>
+                                            <option value="EN_REVISION">En Revisión</option>
+                                            <option value="ASIGNADA">Asignada</option>
+                                            <option value="EN_EJECUCION">En Ejecución</option>
+                                            <option value="RESUELTA">Resuelta</option>
+                                            <option value="RECHAZADA">Rechazada</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Tipo de Problema</label>
+                                        <input type="text" class="form-control" id="filtro-tipo" placeholder="Buscar por tipo...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Fecha Desde</label>
+                                        <input type="date" class="form-control" id="filtro-fecha-desde">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Fecha Hasta</label>
+                                        <input type="date" class="form-control" id="filtro-fecha-hasta">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <button class="btn btn-primary me-2" onclick="filtrarDenuncias()">
+                                            <i class="fas fa-search me-1"></i>Filtrar
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                                            <i class="fas fa-times me-1"></i>Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Denuncias -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Título</th>
+                                                <th>Usuario</th>
+                                                <th>Tipo</th>
+                                                <th>Estado</th>
+                                                <th>Fecha</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-denuncias">
+                                            <!-- Se llenará dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usuarios Section -->
+                    <div id="usuarios-section" class="hidden">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Gestión de Usuarios</h4>
+                            <button class="btn btn-primary btn-custom" onclick="showModal('usuario')">
+                                <i class="fas fa-plus me-2"></i>Nuevo Usuario
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th>Correo</th>
+                                                <th>Rol</th>
+                                                <th>Fecha Registro</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-usuarios">
+                                            <!-- Se llenará dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas Section -->
+                    <div id="estadisticas-section" class="hidden">
+                        <h4 class="mb-4">Estadísticas del Sistema</h4>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Denuncias por Mes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="denunciasMesChart" width="400" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Tipos de Problemas</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="tiposChart" width="400" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Tiempo Promedio de Resolución</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-md-3">
+                                                <h3 class="text-primary">2.5</h3>
+                                                <p>Días Promedio</p>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <h3 class="text-success">85%</h3>
+                                                <p>Eficiencia</p>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <h3 class="text-warning">15</h3>
+                                                <p>Casos Pendientes</p>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <h3 class="text-info">120</h3>
+                                                <p>Total Resueltos</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración Section -->
+                    <div id="configuracion-section" class="hidden">
+                        <h4 class="mb-4">Configuración del Sistema</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Configuración General</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nombre del Sistema</label>
+                                                <input type="text" class="form-control" value="Sistema de Denuncias Urbanas">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Email de Contacto</label>
+                                                <input type="email" class="form-control" value="admin@denuncias.com">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Tiempo Máximo de Resolución (días)</label>
+                                                <input type="number" class="form-control" value="7">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Tipos de Problemas</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" placeholder="Nuevo tipo de problema">
+                                                <button class="btn btn-outline-primary" type="button">Agregar</button>
+                                            </div>
+                                        </div>
+                                        <ul class="list-group">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Baches en la calle
+                                                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Falta de alumbrado
+                                                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Acumulación de basura
+                                                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Denuncias -->
+    <div class="modal fade" id="denunciaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Denuncia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-denuncia">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Título *</label>
+                                    <input type="text" class="form-control" id="titulo" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Problema *</label>
+                                    <select class="form-select" id="tipo-problema" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Baches">Baches</option>
+                                        <option value="Alumbrado">Alumbrado</option>
+                                        <option value="Basura">Basura</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="descripcion" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="direccion">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Evidencia (Fotos)</label>
+                            <input type="file" class="form-control" id="evidencia" multiple accept="image/*">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarDenuncia()">Guardar Denuncia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Usuarios -->
+    <div class="modal fade" id="usuarioModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-usuario">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombres *</label>
+                                    <input type="text" class="form-control" id="nombres" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Apellidos *</label>
+                                    <input type="text" class="form-control" id="apellidos" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico *</label>
+                            <input type="email" class="form-control" id="correo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="contrasena" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol *</label>
+                            <select class="form-select" id="rol" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="CIUDADANO">Ciudadano</option>
+                                <option value="AUTORIDAD">Autoridad</option>
+                                <option value="ADMIN">Administrador</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarUsuario()">Guardar Usuario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Datos de ejemplo (en producción vendrían de la API)
+        let denuncias = [
+            {
+                id: 1,
+                titulo: "Bache en Av. Principal",
+                usuario: "Juan Pérez",
+                tipo: "Baches",
+                estado: "REGISTRADA",
+                fecha: "2024-01-15",
+                descripcion: "Bache grande que dificulta el tránsito"
+            },
+            {
+                id: 2,
+                titulo: "Falta de alumbrado",
+                usuario: "María García",
+                tipo: "Alumbrado",
+                estado: "EN_REVISION",
+                fecha: "2024-01-14",
+                descripcion: "Poste de luz no funciona desde hace una semana"
+            },
+            {
+                id: 3,
+                titulo: "Basura acumulada",
+                usuario: "Carlos López",
+                tipo: "Basura",
+                estado: "RESUELTA",
+                fecha: "2024-01-10",
+                descripcion: "Contenedores llenos, basura en la calle"
+            }
+        ];
+
+        let usuarios = [
+            {
+                id: 1,
+                nombres: "Juan",
+                apellidos: "Pérez",
+                correo: "juan@email.com",
+                rol: "CIUDADANO",
+                fechaRegistro: "2024-01-01"
+            },
+            {
+                id: 2,
+                nombres: "María",
+                apellidos: "García",
+                correo: "maria@email.com",
+                rol: "AUTORIDAD",
+                fechaRegistro: "2024-01-02"
+            },
+            {
+                id: 3,
+                nombres: "Carlos",
+                apellidos: "López",
+                correo: "carlos@email.com",
+                rol: "ADMIN",
+                fechaRegistro: "2024-01-03"
+            }
+        ];
+
+        // Función para mostrar secciones
+        function showSection(section) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('[id$="-section"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Remover active de todos los nav-links
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            document.getElementById(section + '-section').classList.remove('hidden');
+            
+            // Activar el nav-link correspondiente
+            event.target.classList.add('active');
+            
+            // Actualizar título
+            const titles = {
+                'dashboard': 'Dashboard',
+                'denuncias': 'Gestión de Denuncias',
+                'usuarios': 'Gestión de Usuarios',
+                'estadisticas': 'Estadísticas',
+                'configuracion': 'Configuración'
+            };
+            document.getElementById('page-title').textContent = titles[section];
+            
+            // Cargar datos específicos de la sección
+            if (section === 'denuncias') {
+                cargarDenuncias();
+            } else if (section === 'usuarios') {
+                cargarUsuarios();
+            } else if (section === 'dashboard') {
+                cargarDashboard();
+            }
+        }
+
+        // Función para mostrar modales
+        function showModal(tipo) {
+            if (tipo === 'denuncia') {
+                new bootstrap.Modal(document.getElementById('denunciaModal')).show();
+            } else if (tipo === 'usuario') {
+                new bootstrap.Modal(document.getElementById('usuarioModal')).show();
+            }
+        }
+
+        // Función para cargar denuncias
+        function cargarDenuncias() {
+            const tbody = document.getElementById('tabla-denuncias');
+            tbody.innerHTML = '';
+            
+            denuncias.forEach(denuncia => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${denuncia.id}</td>
+                    <td>${denuncia.titulo}</td>
+                    <td>${denuncia.usuario}</td>
+                    <td>${denuncia.tipo}</td>
+                    <td><span class="status-badge status-${denuncia.estado.toLowerCase()}">${denuncia.estado.replace('_', ' ')}</span></td>
+                    <td>${denuncia.fecha}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="verDenuncia(${denuncia.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editarDenuncia(${denuncia.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarDenuncia(${denuncia.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para cargar usuarios
+        function cargarUsuarios() {
+            const tbody = document.getElementById('tabla-usuarios');
+            tbody.innerHTML = '';
+            
+            usuarios.forEach(usuario => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${usuario.id}</td>
+                    <td>${usuario.nombres} ${usuario.apellidos}</td>
+                    <td>${usuario.correo}</td>
+                    <td><span class="role-badge role-${usuario.rol.toLowerCase()}">${usuario.rol}</span></td>
+                    <td>${usuario.fechaRegistro}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editarUsuario(${usuario.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuario(${usuario.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para cargar dashboard
+        function cargarDashboard() {
+            // Actualizar estadísticas
+            document.getElementById('total-denuncias').textContent = denuncias.length;
+            document.getElementById('pendientes').textContent = denuncias.filter(d => d.estado === 'REGISTRADA' || d.estado === 'EN_REVISION').length;
+            document.getElementById('resueltas').textContent = denuncias.filter(d => d.estado === 'RESUELTA').length;
+            document.getElementById('total-usuarios').textContent = usuarios.length;
+
+            // Cargar últimas denuncias
+            const ultimasDenuncias = document.getElementById('ultimas-denuncias');
+            ultimasDenuncias.innerHTML = '';
+            
+            denuncias.slice(0, 5).forEach(denuncia => {
+                const div = document.createElement('div');
+                div.className = 'd-flex justify-content-between align-items-center mb-2 p-2 border rounded';
+                div.innerHTML = `
+                    <div>
+                        <strong>${denuncia.titulo}</strong><br>
+                        <small class="text-muted">${denuncia.fecha}</small>
+                    </div>
+                    <span class="status-badge status-${denuncia.estado.toLowerCase()}">${denuncia.estado.replace('_', ' ')}</span>
+                `;
+                ultimasDenuncias.appendChild(div);
+            });
+
+            // Crear gráfico de estados
+            const ctx = document.getElementById('estadosChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Registradas', 'En Revisión', 'Asignadas', 'En Ejecución', 'Resueltas', 'Rechazadas'],
+                    datasets: [{
+                        data: [2, 1, 0, 0, 1, 0],
+                        backgroundColor: [
+                            '#1976d2',
+                            '#f57c00',
+                            '#7b1fa2',
+                            '#388e3c',
+                            '#2e7d32',
+                            '#d32f2f'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Funciones de filtrado
+        function filtrarDenuncias() {
+            // Implementar lógica de filtrado
+            console.log('Filtrando denuncias...');
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-estado').value = '';
+            document.getElementById('filtro-tipo').value = '';
+            document.getElementById('filtro-fecha-desde').value = '';
+            document.getElementById('filtro-fecha-hasta').value = '';
+            cargarDenuncias();
+        }
+
+        // Funciones de CRUD
+        function guardarDenuncia() {
+            const form = document.getElementById('form-denuncia');
+            const formData = new FormData(form);
+            
+            // Aquí iría la lógica para guardar en la base de datos
+            console.log('Guardando denuncia...', formData);
+            
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('denunciaModal')).hide();
+            
+            // Recargar tabla
+            cargarDenuncias();
+        }
+
+        function guardarUsuario() {
+            const form = document.getElementById('form-usuario');
+            const formData = new FormData(form);
+            
+            // Aquí iría la lógica para guardar en la base de datos
+            console.log('Guardando usuario...', formData);
+            
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('usuarioModal')).hide();
+            
+            // Recargar tabla
+            cargarUsuarios();
+        }
+
+        function verDenuncia(id) {
+            console.log('Ver denuncia:', id);
+        }
+
+        function editarDenuncia(id) {
+            console.log('Editar denuncia:', id);
+        }
+
+        function eliminarDenuncia(id) {
+            if (confirm('¿Está seguro de eliminar esta denuncia?')) {
+                console.log('Eliminar denuncia:', id);
+            }
+        }
+
+        function editarUsuario(id) {
+            console.log('Editar usuario:', id);
+        }
+
+        function eliminarUsuario(id) {
+            if (confirm('¿Está seguro de eliminar este usuario?')) {
+                console.log('Eliminar usuario:', id);
+            }
+        }
+
+        // Inicializar dashboard al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDashboard();
+        });
+    </script>
+</body>
+</html>
