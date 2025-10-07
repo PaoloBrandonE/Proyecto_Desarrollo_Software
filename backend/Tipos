@@ -1,0 +1,8 @@
+USE BD_DenunciasCiudadanas;
+GO
+
+EXEC sp_addtype TIdUsuario, 'int', 'not null';
+EXEC sp_addtype TIdDenuncia, 'int', 'not null';
+EXEC sp_addtype TRol, 'varchar(15)', 'not null';
+EXEC sp_addtype TEstado, 'varchar(20)', 'not null';
+GO
