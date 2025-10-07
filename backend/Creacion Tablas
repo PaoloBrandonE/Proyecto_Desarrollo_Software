@@ -1,0 +1,66 @@
+/* ********************************************************************
+                    CREACIÓN DE TABLAS PRINCIPALES
+   ******************************************************************** */
+
+CREATE TABLE Rol (
+    Rol TRol PRIMARY KEY,
+    Descripcion VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Usuario (
+    IdUsuario     INT IDENTITY(1,1) PRIMARY KEY,
+    Correo        VARCHAR(100) UNIQUE NOT NULL,
+    Contrasena    VARCHAR(200) NOT NULL,
+    Nombres       VARCHAR(60) NOT NULL,
+    Apellidos     VARCHAR(60) NOT NULL,
+    Rol           TRol NOT NULL,
+    FechaRegistro DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (Rol) REFERENCES Rol(Rol)
+);
+
+CREATE TABLE Denuncia (
+    IdDenuncia    INT IDENTITY(1,1) PRIMARY KEY,
+    IdUsuario     INT NOT NULL,
+    Titulo        VARCHAR(150) NOT NULL,
+    Descripcion   VARCHAR(MAX) NOT NULL,
+    Direccion     VARCHAR(255),
+    TipoProblema  VARCHAR(60),
+    Estado        TEstado DEFAULT 'REGISTRADA'
+                 CHECK (Estado IN ('REGISTRADA','EN_REVISION','ASIGNADA','EN_EJECUCION','RESUELTA','RECHAZADA')),
+    FechaCreacion DATETIME DEFAULT GETDATE(),
+    FechaCierre   DATETIME NULL,
+    FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario)
+);
+
+CREATE TABLE EstadoDenuncia (
+    IdEstado INT IDENTITY(1,1) PRIMARY KEY,
+    IdDenuncia INT NOT NULL,
+    EstadoAnterior TEstado NULL,
+    EstadoNuevo TEstado NOT NULL,
+    Comentario VARCHAR(255) NULL,
+    IdAutoridad INT NULL,
+    FechaCambio DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (IdDenuncia) REFERENCES Denuncia(IdDenuncia),
+    FOREIGN KEY (IdAutoridad) REFERENCES Usuario(IdUsuario)
+);
+
+CREATE TABLE Comentario (
+    IdComentario INT IDENTITY(1,1) PRIMARY KEY,
+    IdDenuncia INT NOT NULL,
+    IdUsuario INT NOT NULL,
+    Texto VARCHAR(500) NOT NULL,
+    FechaComentario DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (IdDenuncia) REFERENCES Denuncia(IdDenuncia),
+    FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario)
+);
+
+CREATE TABLE Solicitud (
+    IdSolicitud INT IDENTITY(1,1) PRIMARY KEY,
+    IdDenuncia INT NULL,
+    Descripcion VARCHAR(255),
+    EstadoSolicitud VARCHAR(20) DEFAULT 'PENDIENTE'
+        CHECK (EstadoSolicitud IN ('PENDIENTE','APROBADA','RECHAZADA')),
+    FechaSolicitud DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (IdDenuncia) REFERENCES Denuncia(IdDenuncia)
+);
+GO
