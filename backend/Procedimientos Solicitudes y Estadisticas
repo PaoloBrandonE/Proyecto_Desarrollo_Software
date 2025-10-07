@@ -1,0 +1,40 @@
+/* Procedimiento para registrar solicitud del admin */
+IF OBJECT_ID('spu_SolicitudInsertUpdate', 'P') IS NOT NULL
+    DROP PROCEDURE spu_SolicitudInsertUpdate;
+GO
+
+CREATE PROCEDURE spu_SolicitudInsertUpdate
+    @IdSolicitud INT = NULL,
+    @IdDenuncia INT = NULL,
+    @Descripcion VARCHAR(255),
+    @EstadoSolicitud VARCHAR(20)
+AS
+BEGIN
+  IF EXISTS (SELECT IdSolicitud FROM Solicitud WHERE IdSolicitud = @IdSolicitud)
+    UPDATE Solicitud
+       SET Descripcion = @Descripcion,
+           EstadoSolicitud = @EstadoSolicitud
+     WHERE IdSolicitud = @IdSolicitud;
+  ELSE
+    INSERT INTO Solicitud (IdDenuncia, Descripcion, EstadoSolicitud)
+    VALUES(@IdDenuncia, @Descripcion, @EstadoSolicitud);
+END;
+GO
+
+/* Procedimiento para ver estadísticas de denuncias */
+IF OBJECT_ID('spu_EstadisticasDenuncias', 'P') IS NOT NULL
+    DROP PROCEDURE spu_EstadisticasDenuncias;
+GO
+
+CREATE PROCEDURE spu_EstadisticasDenuncias
+AS
+BEGIN
+  SELECT Estado, COUNT(*) AS Total
+    FROM Denuncia
+   GROUP BY Estado;
+
+  SELECT TipoProblema, COUNT(*) AS Total
+    FROM Denuncia
+   GROUP BY TipoProblema;
+END;
+GO
