@@ -1,0 +1,53 @@
+/* Procedimiento para insertar/actualizar Usuarios */
+IF OBJECT_ID('spu_UsuarioInsertUpdate', 'P') IS NOT NULL
+    DROP PROCEDURE spu_UsuarioInsertUpdate;
+GO
+
+CREATE PROCEDURE spu_UsuarioInsertUpdate
+    @IdUsuario INT = NULL,
+    @Correo VARCHAR(100),
+    @Contrasena VARCHAR(200),
+    @Nombres VARCHAR(60),
+    @Apellidos VARCHAR(60),
+    @Rol VARCHAR(15)
+AS
+BEGIN
+  IF EXISTS (SELECT IdUsuario FROM Usuario WHERE IdUsuario = @IdUsuario)
+    UPDATE Usuario
+       SET Correo = @Correo,
+           Contrasena = @Contrasena,
+           Nombres = @Nombres,
+           Apellidos = @Apellidos,
+           Rol = @Rol
+     WHERE IdUsuario = @IdUsuario;
+  ELSE
+    INSERT INTO Usuario (Correo, Contrasena, Nombres, Apellidos, Rol)
+    VALUES(@Correo, @Contrasena, @Nombres, @Apellidos, @Rol);
+END;
+GO
+
+/* Procedimiento para eliminar Usuario */
+IF OBJECT_ID('spu_UsuarioDelete', 'P') IS NOT NULL
+    DROP PROCEDURE spu_UsuarioDelete;
+GO
+
+CREATE PROCEDURE spu_UsuarioDelete @IdUsuario INT
+AS
+BEGIN
+  DELETE FROM Usuario WHERE IdUsuario = @IdUsuario;
+END;
+GO
+
+/* Procedimiento para listar Usuarios */
+IF OBJECT_ID('spu_UsuariosSelect', 'P') IS NOT NULL
+    DROP PROCEDURE spu_UsuariosSelect;
+GO
+
+CREATE PROCEDURE spu_UsuariosSelect @IdUsuario INT = 0
+AS
+BEGIN
+  SELECT IdUsuario, Correo, Nombres, Apellidos, Rol, FechaRegistro
+    FROM Usuario
+   WHERE (@IdUsuario = 0 OR IdUsuario = @IdUsuario);
+END;
+GO
